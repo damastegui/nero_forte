@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Power BI</title>
+    <script>
+        // Función para verificar la contraseña
+        function checkPassword() {
+            if (localStorage.getItem('authenticated') === 'true') {
+                document.getElementById("content").style.display = "block";
+                document.getElementById("logout-button").style.display = "block";
+                startAutoRefresh(); // Inicia el refresco automático
+                return;
+            }
+
+            var password = prompt("Ingrese la contraseña:");
+            if (password === "unacem") { // Establecer contraseña
+                localStorage.setItem('authenticated', 'true');
+                document.getElementById("content").style.display = "block";
+                document.getElementById("logout-button").style.display = "block";
+                startAutoRefresh(); // Inicia el refresco automático
+            } else {
+                alert("Contraseña incorrecta");
+            }
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('authenticated');
+            alert("Sesión cerrada. Recargue la página para ingresar nuevamente.");
+            document.getElementById("content").style.display = "none";
+            document.getElementById("logout-button").style.display = "none";
+            stopAutoRefresh(); // Detiene el refresco automático
+        }
+
+        // Función para calcular el tiempo hasta el próximo intervalo de 7 o 37 minutos
+        function getTimeUntilNextRefresh() {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // Calcula el tiempo restante hasta el próximo intervalo de 7 o 37 minutos
+            if (minutes < 7) {
+                return (7 - minutes) * 60000 - seconds * 1000;
+            } else if (minutes < 37) {
+                return (37 - minutes) * 60000 - seconds * 1000;
+            } else {
+                return (67 - minutes) * 60000 - seconds * 1000; // 67 = 60 + 7
+            }
+        }
+
+        // Función para refrescar automáticamente el iframe
+        var refreshInterval;
+        function startAutoRefresh() {
+            // Programa el primer refresco
+            const timeUntilNextRefresh = getTimeUntilNextRefresh();
+            setTimeout(function() {
+                document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
+                // Programa los siguientes refrescos cada 30 minutos
+                refreshInterval = setInterval(function() {
+                    document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
+                }, 30 * 60000); // 30 minutos en milisegundos
+            }, timeUntilNextRefresh);
+        }
+
+        // Función para detener el refresco automático
+        function stopAutoRefresh() {
+            clearInterval(refreshInterval);
+        }
+    </script>
+</head>
+<body onload="checkPassword()">
+    <div id="content" style="display:none;">
+        <iframe 
+            id="powerbi-iframe"
+            title="Pronósticos SEIN" 
+            width="100%" 
+            height="900" 
+            src="https://app.powerbi.com/reportEmbed?reportId=8b7b027e-669d-467f-a06f-85d02430a66f&autoAuth=true&ctid=6d252419-40fe-4964-bb31-e8aaa96d9766" 
+            frameborder="0" 
+            allowFullScreen="true">
+        </iframe>
+    </div>
+    <button id="logout-button" style="display:none; margin-top: 10px;" onclick="logout()">Cerrar sesión</button>
+</body>
+</html>
