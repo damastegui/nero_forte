@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Power BI</title>
+    <script>
+        // Función para calcular el tiempo hasta el próximo intervalo de 1, 15, 30 o 45 minutos
+        function getTimeUntilNextRefresh() {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // Definimos los minutos objetivo
+            const targetMinutes = [1, 15, 30, 45];
+            
+            // Buscamos el próximo minuto objetivo
+            for (const target of targetMinutes) {
+                if (minutes < target) {
+                    return (target - minutes) * 60000 - seconds * 1000;
+                }
+            }
+            
+            // Si ya pasaron todos los objetivos de esta hora, calculamos para el primero de la próxima hora
+            return (60 - minutes + 1) * 60000 - seconds * 1000;
+        }
+
+        // Función para refrescar automáticamente el iframe
+        var refreshInterval;
+        function startAutoRefresh() {
+            // Programa el primer refresco
+            const timeUntilNextRefresh = getTimeUntilNextRefresh();
+            setTimeout(function() {
+                document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
+                // Programa los siguientes refrescos cada 15 minutos (el intervalo más común)
+                refreshInterval = setInterval(function() {
+                    document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
+                }, 15 * 60000); // 15 minutos en milisegundos
+            }, timeUntilNextRefresh);
+        }
+
+        // Inicia el refresco automático al cargar la página
+        window.onload = function() {
+            document.getElementById("content").style.display = "block";
+            startAutoRefresh();
+        };
+    </script>
+</head>
+<body>
+    <div id="content">
+        <iframe 
+            id="powerbi-iframe"
+            title="Pronósticos SEIN" 
+            width="100%" 
+            height="900" 
+            src="https://app.powerbi.com/view?r=eyJrIjoiYTc1ZGNkNGUtNDg4My00OGYwLWFiNDYtNDJkNjZhNDU5MDliIiwidCI6IjZkMjUyNDE5LTQwZmUtNDk2NC1iYjMxLWU4YWFhOTZkOTc2NiIsImMiOjR9" 
+            frameborder="0" 
+            allowFullScreen="true">
+        </iframe>
+    </div>
+</body>
+</html>
