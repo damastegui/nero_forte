@@ -5,44 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Informe Power BI</title>
     <script>
-        // Función para calcular el tiempo hasta el próximo intervalo de 1, 15, 30 o 45 minutos
+        const targetMinutes = [1, 5, 15, 25, 31, 45];
+        
         function getTimeUntilNextRefresh() {
             const now = new Date();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
+            const currentMinutes = now.getMinutes();
+            const currentSeconds = now.getSeconds();
             
-            // Definimos los minutos objetivo
-            const targetMinutes = [1, 15, 30, 45];
-            
-            // Buscamos el próximo minuto objetivo
             for (const target of targetMinutes) {
-                if (minutes < target) {
-                    return (target - minutes) * 60000 - seconds * 1000;
+                if (currentMinutes < target) {
+                    return (target - currentMinutes) * 60000 - currentSeconds * 1000;
                 }
             }
-            
-            // Si ya pasaron todos los objetivos de esta hora, calculamos para el primero de la próxima hora
-            return (60 - minutes + 1) * 60000 - seconds * 1000;
+            return (60 - currentMinutes + targetMinutes[0]) * 60000 - currentSeconds * 1000;
         }
 
-        // Función para refrescar automáticamente el iframe
-        var refreshInterval;
-        function startAutoRefresh() {
-            // Programa el primer refresco
-            const timeUntilNextRefresh = getTimeUntilNextRefresh();
-            setTimeout(function() {
+        function scheduleRefresh() {
+            setTimeout(() => {
                 document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
-                // Programa los siguientes refrescos cada 15 minutos (el intervalo más común)
-                refreshInterval = setInterval(function() {
-                    document.getElementById('powerbi-iframe').src = document.getElementById('powerbi-iframe').src;
-                }, 15 * 60000); // 15 minutos en milisegundos
-            }, timeUntilNextRefresh);
+                scheduleRefresh();
+            }, getTimeUntilNextRefresh());
         }
-
-        // Inicia el refresco automático al cargar la página
         window.onload = function() {
             document.getElementById("content").style.display = "block";
-            startAutoRefresh();
+            scheduleRefresh();
         };
     </script>
 </head>
@@ -52,7 +38,7 @@
             id="powerbi-iframe"
             title="Pronósticos SEIN" 
             width="100%" 
-            height="900" 
+            height="100%" 
             src="https://app.powerbi.com/reportEmbed?reportId=8b7b027e-669d-467f-a06f-85d02430a66f&autoAuth=true&ctid=6d252419-40fe-4964-bb31-e8aaa96d9766" 
             frameborder="0" 
             allowFullScreen="true">
